@@ -1,11 +1,13 @@
 package ch.noah.soundboard.logic
 
 import android.content.Context
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.networking.NetworkRepository
+import ch.noah.soundboard.storage.FileStorageRepository
 import kotlinx.coroutines.launch
 
 
@@ -15,6 +17,7 @@ class MainViewModel(context: Context) : ViewModel() {
 	//val state: StateFlow<Todo?> = _state
 
 	private val databaseRepository = DatabaseRepository(context)
+	private val fileStorageRepository = FileStorageRepository(context)
 
 	init {
 		load()
@@ -29,6 +32,26 @@ class MainViewModel(context: Context) : ViewModel() {
 					"MainViewModel",
 					"Loaded soundboard: ${soundBoard.title} with ${soundBoard.items.size} items"
 				)
+
+				soundBoard.items.forEach {
+					fileStorageRepository.downloadSoundFile(soundBoard.rootUrl + "/" + it.soundPath, it.getFileName())
+				}
+
+				soundBoard.items.first().let {
+					fileStorageRepository.getSoundFile(it.getFileName())?.let { file ->
+
+						val mediaPlayer = MediaPlayer().apply {
+							setDataSource(file.path)
+							prepare()
+							start()
+
+							// Optional: Release resources when playback completes
+							setOnCompletionListener {
+								release()
+							}
+						}
+					}
+				}
 
 			} catch (e: Exception) {
 				Log.e("MainViewModel", "Error loading soundboard", e)
