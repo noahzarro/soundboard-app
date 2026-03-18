@@ -1,0 +1,28 @@
+CREATE TABLE soundboards (
+    id INTEGER NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    version TEXT NOT NULL,
+    url TEXT NOT NULL
+);
+
+-- Queries
+selectAll:
+SELECT * FROM soundboards;
+
+selectById:
+SELECT * FROM soundboards WHERE id = ?;
+
+insert:
+INSERT INTO soundboards(id, title, version, url)
+VALUES (?, ?, ?,?);
+
+update:
+UPDATE soundboards
+SET title = ?, url = ?
+WHERE id = ?;
+
+deleteById:
+DELETE FROM soundboards WHERE id = ?;
+
+deleteAll:
+DELETE FROM soundboards;
