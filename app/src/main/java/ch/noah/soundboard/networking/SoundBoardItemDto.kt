@@ -1,5 +1,8 @@
 package ch.noah.soundboard.networking
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SoundboadItemDto(
     val name: String,
     val soundPath: String,

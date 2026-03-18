@@ -1,9 +1,13 @@
 package ch.noah.soundboard.networking
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SoundboadDto(
 	val title: String,
 	val version: String,
-	val soundboardItems: List<SoundboadItemDto>,
+	val rootUrl: String,
+	val items: List<SoundboadItemDto>,
 ) {
 	fun isNewerThan(other: SoundboadDto): Boolean {
 		val major = version.substringBefore(".").toIntOrNull() ?: 0
