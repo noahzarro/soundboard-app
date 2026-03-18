@@ -1,10 +1,13 @@
 package ch.noah.soundboard.networking
 
 import retrofit2.http.GET
-import retrofit2.http.Path
+import retrofit2.http.Url
 
 
 interface SoundBoardService {
-    @GET("{boardName}.json")
-    suspend fun getSoundBoard(@Path("boardName") boardName: String): SoundboadDto
+	@GET
+	suspend fun getSoundBoard(@Url url: String): SoundboadDto
+
+	@GET
+	suspend fun getSound(@Url url: String): List<SoundboadDto>
 }

@@ -12,30 +12,30 @@ class DatabaseRepository(context: Context) {
 		context = context,
 		name = "soundboard.db"
 	)
-	
+
 	private val database = SoundboardDatabase(driver)
 	private val queries = database.soundboardsQueries
-	
+
 	suspend fun getAllSoundboards(): List<Soundboards> = withContext(Dispatchers.IO) {
 		queries.selectAll().executeAsList()
 	}
-	
+
 	suspend fun getSoundboardById(id: Long): Soundboards? = withContext(Dispatchers.IO) {
 		queries.selectById(id).executeAsOneOrNull()
 	}
-	
-	suspend fun insertSoundboard(id: Long, title: String, url: String) = withContext(Dispatchers.IO) {
-		queries.insert(id, title, url)
+
+	suspend fun insertSoundboard(id: Long, title: String, version: String, url: String) = withContext(Dispatchers.IO) {
+		queries.insert(id, title, version, url)
 	}
-	
-	suspend fun updateSoundboard(id: Long, title: String, url: String) = withContext(Dispatchers.IO) {
-		queries.update(title, url, id)
+
+	suspend fun updateSoundboard(id: Long, title: String, version: String, url: String) = withContext(Dispatchers.IO) {
+		queries.update(title, url, version, id)
 	}
-	
+
 	suspend fun deleteSoundboardById(id: Long) = withContext(Dispatchers.IO) {
 		queries.deleteById(id)
 	}
-	
+
 	suspend fun deleteAllSoundboards() = withContext(Dispatchers.IO) {
 		queries.deleteAll()
 	}
