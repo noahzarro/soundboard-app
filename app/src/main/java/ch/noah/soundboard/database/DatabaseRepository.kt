@@ -28,8 +28,8 @@ class DatabaseRepository(context: Context) {
 		queries.insert(id, title, version, url)
 	}
 
-	suspend fun updateSoundboard(id: Long, title: String, version: String, url: String) = withContext(Dispatchers.IO) {
-		queries.update(title, url, version, id)
+	suspend fun updateSoundboard(id: Long, title: String, version: String) = withContext(Dispatchers.IO) {
+		queries.update(title, version, id)
 	}
 
 	suspend fun deleteSoundboardById(id: Long) = withContext(Dispatchers.IO) {

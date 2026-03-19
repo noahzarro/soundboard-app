@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.networking.NetworkRepository
+import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
 import kotlinx.coroutines.launch
-
 
 class MainViewModel(context: Context) : ViewModel() {
 
@@ -21,6 +21,41 @@ class MainViewModel(context: Context) : ViewModel() {
 
 	init {
 		load()
+	}
+
+	fun update() {
+		viewModelScope.launch {
+			val soundBoards = databaseRepository.getAllSoundboards()
+			soundBoards.forEach { existingSoundBoard ->
+				val updatedSoundBoard = try {
+					NetworkRepository.api.getSoundBoard(existingSoundBoard.url)
+				} catch (e: Exception) {
+					Log.e("MainViewModel", "Error updating soundboard with id ${existingSoundBoard.id}", e)
+					null
+				}
+
+				if (updatedSoundBoard != null) {
+					if (updatedSoundBoard.isNewerThan(SoundboadDto.fromDatabaseEntity(existingSoundBoard))) {
+						updateSoundBoard(updatedSoundBoard, existingSoundBoard.id)
+					}
+
+				}
+
+			}
+		}
+	}
+
+	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: Long) {
+
+		databaseRepository.updateSoundboard(
+			id = id,
+			title = soundBoardDto.title,
+			version = soundBoardDto.version,
+		)
+		soundBoardDto.items.forEach {
+			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + it.soundPath, it.getFileName())
+			fileStorageRepository.downloadImageFile(soundBoardDto.rootUrl + "/" + it.imagePath, it.getFileName())
+		}
 	}
 
 	fun load() {

@@ -18,7 +18,7 @@ VALUES (?, ?, ?,?);
 
 update:
 UPDATE soundboards
-SET title = ?, version = ?, url = ?
+SET title = ?, version = ?
 WHERE id = ?;
 
 deleteById:
