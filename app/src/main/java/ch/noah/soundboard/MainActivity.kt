@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import ch.noah.soundboard.composables.Greeting
+import ch.noah.soundboard.composables.MainScreen
 import ch.noah.soundboard.ui.theme.SoundboadTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,8 +18,7 @@ class MainActivity : ComponentActivity() {
 		setContent {
 			SoundboadTheme {
 				Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-					Greeting(
-						name = "Android",
+					MainScreen(
 						modifier = Modifier.padding(innerPadding)
 					)
 				}
