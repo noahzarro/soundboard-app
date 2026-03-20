@@ -52,9 +52,23 @@ class MainViewModel(context: Context) : ViewModel() {
 			title = soundBoardDto.title,
 			version = soundBoardDto.version,
 		)
-		soundBoardDto.items.forEach {
-			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + it.soundPath, it.getFileName())
-			fileStorageRepository.downloadImageFile(soundBoardDto.rootUrl + "/" + it.imagePath, it.getFileName())
+		soundBoardDto.items.forEachIndexed { index, item ->
+			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + item.soundPath, id, index)
+			fileStorageRepository.downloadImageFile(soundBoardDto.rootUrl + "/" + item.imagePath, id, index)
+		}
+	}
+
+	fun playSound(soundboardId: Long, itemIndex: Int, extension: String) {
+		fileStorageRepository.getSoundFile(soundboardId, itemIndex, extension)?.let { file ->
+			MediaPlayer().apply {
+				setDataSource(file.path)
+				prepare()
+				start()
+
+				setOnCompletionListener {
+					release()
+				}
+			}
 		}
 	}
 
@@ -68,12 +82,17 @@ class MainViewModel(context: Context) : ViewModel() {
 					"Loaded soundboard: ${soundBoard.title} with ${soundBoard.items.size} items"
 				)
 
-				soundBoard.items.forEach {
-					fileStorageRepository.downloadSoundFile(soundBoard.rootUrl + "/" + it.soundPath, it.getFileName())
+				// For this example, we'll use a hardcoded soundboard ID
+				// In a real app, you would get this from the database or generate it
+				val soundboardId = 1L
+
+				soundBoard.items.forEachIndexed { index, item ->
+					fileStorageRepository.downloadSoundFile(soundBoard.rootUrl + "/" + item.soundPath, soundboardId, index)
 				}
 
-				soundBoard.items.first().let {
-					fileStorageRepository.getSoundFile(it.getFileName())?.let { file ->
+				soundBoard.items.firstOrNull()?.let { firstItem ->
+					val extension = firstItem.soundPath.substringAfterLast(".")
+					fileStorageRepository.getSoundFile(soundboardId, 0, ".$extension")?.let { file ->
 
 						val mediaPlayer = MediaPlayer().apply {
 							setDataSource(file.path)
