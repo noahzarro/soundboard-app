@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.networking.NetworkRepository
@@ -58,20 +59,6 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	fun playSound(soundboardId: Long, itemIndex: Int, extension: String) {
-		fileStorageRepository.getSoundFile(soundboardId, itemIndex, extension)?.let { file ->
-			MediaPlayer().apply {
-				setDataSource(file.path)
-				prepare()
-				start()
-
-				setOnCompletionListener {
-					release()
-				}
-			}
-		}
-	}
-
 	fun load() {
 		viewModelScope.launch {
 			try {
@@ -113,4 +100,14 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
+}
+
+class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+	@Suppress("UNCHECKED_CAST")
+	override fun <T : ViewModel> create(modelClass: Class<T>): T {
+		if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+			return MainViewModel(context) as T
+		}
+		throw IllegalArgumentException("Unknown ViewModel class")
+	}
 }
