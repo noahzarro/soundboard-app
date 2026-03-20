@@ -6,10 +6,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.networking.NetworkRepository
 import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(context: Context) : ViewModel() {
@@ -19,6 +22,9 @@ class MainViewModel(context: Context) : ViewModel() {
 
 	private val databaseRepository = DatabaseRepository(context)
 	private val fileStorageRepository = FileStorageRepository(context)
+
+	private val soundBoardsMutable = MutableStateFlow<ViewState<List<SoundboadDto>>>(ViewState.Loading)
+	val soundBoards = soundBoardsMutable.asStateFlow()
 
 	init {
 		load()
