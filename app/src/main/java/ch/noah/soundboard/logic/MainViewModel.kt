@@ -69,7 +69,11 @@ class MainViewModel(context: Context) : ViewModel() {
 			version = soundBoardDto.version,
 			rootUrl = soundBoardDto.rootUrl
 		)
+
+		databaseRepository.deleteSoundItemsByBoardId(id)
+
 		soundBoardDto.items.forEachIndexed { index, item ->
+			val uuid = java.util.UUID.randomUUID().toString()
 			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + item.soundPath, id, index)
 			fileStorageRepository.downloadImageFile(soundBoardDto.rootUrl + "/" + item.imagePath, id, index)
 		}
