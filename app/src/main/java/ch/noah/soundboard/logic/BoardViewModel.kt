@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import ch.noah.soundboard.storage.FileStorageRepository
 
-class BoardViewModel(context: Context, val soundBoardId: Long) : ViewModel() {
+class BoardViewModel(context: Context, private val soundBoardId: Long) : ViewModel() {
 
 	private val fileStorageRepository = FileStorageRepository(context)
 
@@ -25,7 +25,8 @@ class BoardViewModel(context: Context, val soundBoardId: Long) : ViewModel() {
 	}
 }
 
-class BoardViewModelFactory(private val context: Context, private val soundBoardId: Long) : ViewModelProvider.Factory {
+class BoardViewModelFactory(private val context: Context, private val soundBoardId: Long) :
+	ViewModelProvider.Factory {
 	@Suppress("UNCHECKED_CAST")
 	override fun <T : ViewModel> create(modelClass: Class<T>): T {
 		if (modelClass.isAssignableFrom(BoardViewModel::class.java)) {

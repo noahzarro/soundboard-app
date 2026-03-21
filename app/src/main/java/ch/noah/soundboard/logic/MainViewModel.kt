@@ -27,7 +27,8 @@ class MainViewModel(context: Context) : ViewModel() {
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
 	init {
-		load()
+		//load()
+		loadFromDisk()
 	}
 
 	fun update() {
@@ -49,6 +50,13 @@ class MainViewModel(context: Context) : ViewModel() {
 				}
 
 			}
+		}
+	}
+
+	private fun loadFromDisk() {
+		viewModelScope.launch {
+			val soundBoards = databaseRepository.getAllSoundboards()
+			soundBoardsMutable.value = ViewState.Success(soundBoards.map { SoundboadDto.fromDatabaseEntity(it) })
 		}
 	}
 

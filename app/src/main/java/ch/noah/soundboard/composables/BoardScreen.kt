@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Card
@@ -15,14 +14,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ch.noah.soundboard.logic.BoardViewModel
+import ch.noah.soundboard.logic.BoardViewModelFactory
+import ch.noah.soundboard.logic.MainViewModel
+import ch.noah.soundboard.logic.MainViewModelFactory
+import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.ui.theme.SoundboadTheme
 
 @Composable
 fun BoardScreen(
-	boardTitle: String,
-	modifier: Modifier = Modifier
+	soundBoardId: Long,
+	soundBoardDto: SoundboadDto,
+	viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory (LocalContext.current, soundBoardId)),
+	modifier: Modifier = Modifier,
 ) {
 	LazyVerticalGrid(
 		columns = GridCells.Fixed(2),
@@ -31,8 +39,11 @@ fun BoardScreen(
 		horizontalArrangement = Arrangement.spacedBy(16.dp),
 		verticalArrangement = Arrangement.spacedBy(16.dp)
 	) {
-		items(12) { index ->
-			SoundItemPlaceholder(index = index)
+		soundBoardDto.items.forEachIndexed { index, item ->
+			item {
+				SoundItemPlaceholder(index = index, onClick = {
+					viewModel.playSound(index, item.extension)
+				})})
 		}
 	}
 }
@@ -40,7 +51,8 @@ fun BoardScreen(
 @Composable
 private fun SoundItemPlaceholder(
 	index: Int,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
+	onClick: () -> Unit,
 ) {
 	Card(
 		modifier = modifier.aspectRatio(1f),
@@ -65,6 +77,13 @@ private fun SoundItemPlaceholder(
 @Composable
 fun BoardScreenPreview() {
 	SoundboadTheme {
-		BoardScreen(boardTitle = "Sample Board")
+		BoardScreen(
+			soundBoardDto = SoundboadDto(
+				title = "Test Board",
+				rootUrl = "https://example.com/soundboard",
+				version = "1",
+				items = emptyList()
+			)
+		)
 	}
 }
