@@ -1,6 +1,6 @@
 package ch.noah.soundboard.networking
 
-import ch.noah.soundboard.database.Soundboards
+import ch.noah.soundboard.database.SoundBoards
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,7 +12,7 @@ data class SoundboadDto(
 ) {
 
 	companion object {
-		fun fromDatabaseEntity(entity: Soundboards): SoundboadDto {
+		fun fromDatabaseEntity(entity: SoundBoards): SoundboadDto {
 			return SoundboadDto(
 				title = entity.title,
 				version = entity.version,

@@ -16,27 +16,61 @@ class DatabaseRepository(context: Context) {
 	private val database = SoundboardDatabase(driver)
 	private val queries = database.soundboardsQueries
 
-	suspend fun getAllSoundboards(): List<Soundboards> = withContext(Dispatchers.IO) {
-		queries.selectAll().executeAsList()
+	// SoundBoards operations
+	suspend fun getAllSoundboards(): List<SoundBoards> = withContext(Dispatchers.IO) {
+		queries.selectAllBoards().executeAsList()
 	}
 
-	suspend fun getSoundboardById(id: Long): Soundboards? = withContext(Dispatchers.IO) {
-		queries.selectById(id).executeAsOneOrNull()
+	suspend fun getSoundboardById(id: String): SoundBoards? = withContext(Dispatchers.IO) {
+		queries.selectBoardById(id).executeAsOneOrNull()
 	}
 
-	suspend fun insertSoundboard(id: Long, title: String, version: String, url: String) = withContext(Dispatchers.IO) {
-		queries.insert(id, title, version, url)
+	suspend fun insertSoundboard(id: String, title: String, version: String, rootUrl: String) = withContext(Dispatchers.IO) {
+		queries.insertBoard(id, title, version, rootUrl)
 	}
 
-	suspend fun updateSoundboard(id: Long, title: String, version: String) = withContext(Dispatchers.IO) {
-		queries.update(title, version, id)
+	suspend fun updateSoundboard(id: String, title: String, version: String, rootUrl: String) = withContext(Dispatchers.IO) {
+		queries.updateBoard(title, version, rootUrl, id)
 	}
 
-	suspend fun deleteSoundboardById(id: Long) = withContext(Dispatchers.IO) {
-		queries.deleteById(id)
+	suspend fun deleteSoundboardById(id: String) = withContext(Dispatchers.IO) {
+		queries.deleteBoardById(id)
 	}
 
 	suspend fun deleteAllSoundboards() = withContext(Dispatchers.IO) {
-		queries.deleteAll()
+		queries.deleteAllBoards()
+	}
+
+	// SoundItems operations
+	suspend fun getAllSoundItems(): List<SoundItems> = withContext(Dispatchers.IO) {
+		queries.selectAllItems().executeAsList()
+	}
+
+	suspend fun getSoundItemById(id: String): SoundItems? = withContext(Dispatchers.IO) {
+		queries.selectItemById(id).executeAsOneOrNull()
+	}
+
+	suspend fun getSoundItemsByBoardId(boardId: String): List<SoundItems> = withContext(Dispatchers.IO) {
+		queries.selectItemsByBoardId(boardId).executeAsList()
+	}
+
+	suspend fun insertSoundItem(id: String, boardId: String, name: String, soundFile: String, imageFile: String) = withContext(Dispatchers.IO) {
+		queries.insertItem(id, boardId, name, soundFile, imageFile)
+	}
+
+	suspend fun updateSoundItem(id: String, name: String, soundFile: String, imageFile: String) = withContext(Dispatchers.IO) {
+		queries.updateItem(name, soundFile, imageFile, id)
+	}
+
+	suspend fun deleteSoundItemById(id: String) = withContext(Dispatchers.IO) {
+		queries.deleteItemById(id)
+	}
+
+	suspend fun deleteSoundItemsByBoardId(boardId: String) = withContext(Dispatchers.IO) {
+		queries.deleteItemsByBoardId(boardId)
+	}
+
+	suspend fun deleteAllSoundItems() = withContext(Dispatchers.IO) {
+		queries.deleteAllItems()
 	}
 }

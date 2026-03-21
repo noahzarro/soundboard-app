@@ -1,28 +1,67 @@
-CREATE TABLE soundboards (
-    id INTEGER NOT NULL PRIMARY KEY,
+-- SoundBoards table with String ID
+CREATE TABLE soundBoards (
+    id TEXT NOT NULL PRIMARY KEY,
     title TEXT NOT NULL,
     version TEXT NOT NULL,
-    url TEXT NOT NULL
+    rootUrl TEXT NOT NULL
 );
 
--- Queries
-selectAll:
-SELECT * FROM soundboards;
+-- SoundItems table with UUID and foreign key to soundBoards
+CREATE TABLE soundItems (
+    id TEXT NOT NULL PRIMARY KEY,
+    boardId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    soundFile TEXT NOT NULL,
+    imageFile TEXT NOT NULL,
+    FOREIGN KEY (boardId) REFERENCES soundBoards(id) ON DELETE CASCADE
+);
 
-selectById:
-SELECT * FROM soundboards WHERE id = ?;
+-- SoundBoards Queries
+selectAllBoards:
+SELECT * FROM soundBoards;
 
-insert:
-INSERT INTO soundboards(id, title, version, url)
-VALUES (?, ?, ?,?);
+selectBoardById:
+SELECT * FROM soundBoards WHERE id = ?;
 
-update:
-UPDATE soundboards
-SET title = ?, version = ?
+insertBoard:
+INSERT INTO soundBoards(id, title, version, rootUrl)
+VALUES (?, ?, ?, ?);
+
+updateBoard:
+UPDATE soundBoards
+SET title = ?, version = ?, rootUrl = ?
 WHERE id = ?;
 
-deleteById:
-DELETE FROM soundboards WHERE id = ?;
+deleteBoardById:
+DELETE FROM soundBoards WHERE id = ?;
 
-deleteAll:
-DELETE FROM soundboards;
+deleteAllBoards:
+DELETE FROM soundBoards;
+
+-- SoundItems Queries
+selectAllItems:
+SELECT * FROM soundItems;
+
+selectItemById:
+SELECT * FROM soundItems WHERE id = ?;
+
+selectItemsByBoardId:
+SELECT * FROM soundItems WHERE boardId = ?;
+
+insertItem:
+INSERT INTO soundItems(id, boardId, name, soundFile, imageFile)
+VALUES (?, ?, ?, ?, ?);
+
+updateItem:
+UPDATE soundItems
+SET name = ?, soundFile = ?, imageFile = ?
+WHERE id = ?;
+
+deleteItemById:
+DELETE FROM soundItems WHERE id = ?;
+
+deleteItemsByBoardId:
+DELETE FROM soundItems WHERE boardId = ?;
+
+deleteAllItems:
+DELETE FROM soundItems;

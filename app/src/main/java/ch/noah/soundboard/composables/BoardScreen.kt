@@ -1,61 +1,116 @@
 package ch.noah.soundboard.composables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.logic.BoardViewModel
 import ch.noah.soundboard.logic.BoardViewModelFactory
-import ch.noah.soundboard.logic.MainViewModel
-import ch.noah.soundboard.logic.MainViewModelFactory
-import ch.noah.soundboard.networking.SoundboadDto
+import ch.noah.soundboard.networking.SoundboadItemDto
 import ch.noah.soundboard.ui.theme.SoundboadTheme
 
 @Composable
 fun BoardScreen(
 	soundBoardId: Long,
-	soundBoardDto: SoundboadDto,
-	viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory (LocalContext.current, soundBoardId)),
 	modifier: Modifier = Modifier,
+	viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(LocalContext.current, soundBoardId)),
 ) {
-	LazyVerticalGrid(
-		columns = GridCells.Fixed(2),
-		modifier = modifier.fillMaxSize(),
-		contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-		horizontalArrangement = Arrangement.spacedBy(16.dp),
-		verticalArrangement = Arrangement.spacedBy(16.dp)
-	) {
-		soundBoardDto.items.forEachIndexed { index, item ->
-			item {
-				SoundItemPlaceholder(index = index, onClick = {
-					viewModel.playSound(index, item.extension)
-				})})
+	val soundBoardItemsState by viewModel.soundBoardItems.collectAsState()
+
+	when (soundBoardItemsState) {
+		is ViewState.Loading -> {
+			BoardLoadingScreen(modifier = modifier)
+		}
+		is ViewState.Error -> {
+			BoardErrorScreen(
+				message = (soundBoardItemsState as ViewState.Error).message,
+				modifier = modifier
+			)
+		}
+		is ViewState.Success -> {
+			val items = (soundBoardItemsState as ViewState.Success<List<SoundboadItemDto>>).data
+			if (items.isEmpty()) {
+				BoardEmptyScreen(modifier = modifier)
+			} else {
+				BoardGrid(
+					items = items,
+					onItemClick = { index -> viewModel.playSound(index) },
+					modifier = modifier
+				)
+			}
+		}
+		is ViewState.SilentLoading -> {
+			val items = (soundBoardItemsState as ViewState.SilentLoading<List<SoundboadItemDto>>).data
+			if (items.isEmpty()) {
+				BoardEmptyScreen(modifier = modifier)
+			} else {
+				BoardGrid(
+					items = items,
+					onItemClick = { index -> viewModel.playSound(index) },
+					modifier = modifier
+				)
+			}
 		}
 	}
 }
 
 @Composable
-private fun SoundItemPlaceholder(
+private fun BoardGrid(
+	items: List<SoundboadItemDto>,
+	onItemClick: (Int) -> Unit,
+	modifier: Modifier = Modifier
+) {
+	LazyVerticalGrid(
+		columns = GridCells.Fixed(2),
+		modifier = modifier.fillMaxSize(),
+		contentPadding = PaddingValues(16.dp),
+		horizontalArrangement = Arrangement.spacedBy(16.dp),
+		verticalArrangement = Arrangement.spacedBy(16.dp)
+	) {
+		items(items.size) { index ->
+			SoundItem(
+				item = items[index],
+				index = index,
+				onClick = { onItemClick(index) }
+			)
+		}
+	}
+}
+
+@Composable
+private fun SoundItem(
+	item: SoundboadItemDto,
 	index: Int,
-	modifier: Modifier = Modifier,
 	onClick: () -> Unit,
+	modifier: Modifier = Modifier
 ) {
 	Card(
-		modifier = modifier.aspectRatio(1f),
+		modifier = modifier
+			.aspectRatio(1f)
+			.clickable(onClick = onClick),
 		elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 	) {
 		Box(
@@ -65,9 +120,81 @@ private fun SoundItemPlaceholder(
 			contentAlignment = Alignment.Center
 		) {
 			Text(
-				text = "Item $index",
+				text = item.name,
 				style = MaterialTheme.typography.titleMedium,
-				color = MaterialTheme.colorScheme.onPrimaryContainer
+				color = MaterialTheme.colorScheme.onPrimaryContainer,
+				textAlign = TextAlign.Center,
+				modifier = Modifier.padding(8.dp)
+			)
+		}
+	}
+}
+
+@Composable
+private fun BoardLoadingScreen(modifier: Modifier = Modifier) {
+	Box(
+		modifier = modifier.fillMaxSize(),
+		contentAlignment = Alignment.Center
+	) {
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			CircularProgressIndicator()
+			Text(
+				text = "Loading sounds...",
+				style = MaterialTheme.typography.bodyLarge,
+				modifier = Modifier.padding(top = 16.dp)
+			)
+		}
+	}
+}
+
+@Composable
+private fun BoardErrorScreen(
+	message: String,
+	modifier: Modifier = Modifier
+) {
+	Box(
+		modifier = modifier.fillMaxSize(),
+		contentAlignment = Alignment.Center
+	) {
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			modifier = Modifier.padding(16.dp)
+		) {
+			Text(
+				text = "Error Loading Board",
+				style = MaterialTheme.typography.headlineMedium,
+				color = MaterialTheme.colorScheme.error
+			)
+			Text(
+				text = message,
+				style = MaterialTheme.typography.bodyLarge,
+				textAlign = TextAlign.Center,
+				modifier = Modifier.padding(top = 8.dp)
+			)
+		}
+	}
+}
+
+@Composable
+private fun BoardEmptyScreen(modifier: Modifier = Modifier) {
+	Box(
+		modifier = modifier.fillMaxSize(),
+		contentAlignment = Alignment.Center
+	) {
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			modifier = Modifier.padding(16.dp)
+		) {
+			Text(
+				text = "No sounds available",
+				style = MaterialTheme.typography.headlineMedium
+			)
+			Text(
+				text = "This board has no sounds yet",
+				style = MaterialTheme.typography.bodyLarge,
+				modifier = Modifier.padding(top = 8.dp)
 			)
 		}
 	}
@@ -75,15 +202,24 @@ private fun SoundItemPlaceholder(
 
 @Preview(showBackground = true)
 @Composable
-fun BoardScreenPreview() {
+fun BoardLoadingScreenPreview() {
 	SoundboadTheme {
-		BoardScreen(
-			soundBoardDto = SoundboadDto(
-				title = "Test Board",
-				rootUrl = "https://example.com/soundboard",
-				version = "1",
-				items = emptyList()
-			)
-		)
+		BoardLoadingScreen()
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BoardErrorScreenPreview() {
+	SoundboadTheme {
+		BoardErrorScreen(message = "Failed to load sounds. Please try again.")
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BoardEmptyScreenPreview() {
+	SoundboadTheme {
+		BoardEmptyScreen()
 	}
 }

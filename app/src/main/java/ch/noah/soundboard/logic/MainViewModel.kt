@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.database.DatabaseRepository
+import ch.noah.soundboard.database.SoundBoards
 import ch.noah.soundboard.networking.NetworkRepository
 import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
@@ -23,7 +24,7 @@ class MainViewModel(context: Context) : ViewModel() {
 	private val databaseRepository = DatabaseRepository(context)
 	private val fileStorageRepository = FileStorageRepository(context)
 
-	private val soundBoardsMutable = MutableStateFlow<ViewState<List<SoundboadDto>>>(ViewState.Loading)
+	private val soundBoardsMutable = MutableStateFlow<ViewState<List<SoundBoards>>>(ViewState.Loading)
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
 	init {
@@ -56,16 +57,17 @@ class MainViewModel(context: Context) : ViewModel() {
 	private fun loadFromDisk() {
 		viewModelScope.launch {
 			val soundBoards = databaseRepository.getAllSoundboards()
-			soundBoardsMutable.value = ViewState.Success(soundBoards.map { SoundboadDto.fromDatabaseEntity(it) })
+			soundBoardsMutable.value = ViewState.Success(soundBoards)
 		}
 	}
 
-	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: Long) {
+	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: String) {
 
 		databaseRepository.updateSoundboard(
 			id = id,
 			title = soundBoardDto.title,
 			version = soundBoardDto.version,
+			rootUrl = soundBoardDto.rootUrl
 		)
 		soundBoardDto.items.forEachIndexed { index, item ->
 			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + item.soundPath, id, index)
@@ -91,9 +93,8 @@ class MainViewModel(context: Context) : ViewModel() {
 					fileStorageRepository.downloadSoundFile(soundBoard.rootUrl + "/" + item.soundPath, soundboardId, index)
 				}
 
-				soundBoard.items.firstOrNull()?.let { firstItem ->
-					val extension = firstItem.soundPath.substringAfterLast(".")
-					fileStorageRepository.getSoundFile(soundboardId, 0, ".$extension")?.let { file ->
+				soundBoard.items.firstOrNull()?.let {
+					fileStorageRepository.getSoundFile(soundboardId, 0)?.let { file ->
 
 						val mediaPlayer = MediaPlayer().apply {
 							setDataSource(file.path)
