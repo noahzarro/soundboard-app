@@ -95,7 +95,9 @@ private fun BoardGrid(
 ) {
 	LazyVerticalGrid(
 		columns = GridCells.Fixed(2),
-		modifier = modifier.fillMaxSize(),
+		modifier = modifier
+			.fillMaxSize()
+			.navigationBarsPadding(),
 		contentPadding = PaddingValues(16.dp),
 		horizontalArrangement = Arrangement.spacedBy(16.dp),
 		verticalArrangement = Arrangement.spacedBy(16.dp)
