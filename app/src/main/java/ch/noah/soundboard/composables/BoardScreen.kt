@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -36,6 +37,7 @@ fun BoardScreen(
 		factory = BoardViewModelFactory(LocalContext.current, soundBoardId)
 	)
 	val soundBoardItemsState by viewModel.soundBoardItems.collectAsState()
+	val soundBoardName by viewModel.soundBoardName.collectAsState()
 
 	when (soundBoardItemsState) {
 		is ViewState.Loading -> {
@@ -49,18 +51,35 @@ fun BoardScreen(
 		}
 		is ViewState.Success, is ViewState.SilentLoading -> {
 			val items = soundBoardItemsState.dataOrNull() ?: emptyList()
-			if (items.isEmpty()) {
+			val soundBoardTitle = soundBoardName
+			if (items.isEmpty() || soundBoardTitle == null) {
 				BoardEmptyScreen(modifier = modifier)
 			} else {
 				val context = LocalContext.current
 				val fileStorageRepository = remember { FileStorageRepository(context) }
+				Column(modifier = Modifier.fillMaxSize()) {
+					Box(
+						modifier = modifier
+							.fillMaxWidth()
+							.background(MaterialTheme.colorScheme.primaryContainer),
+						contentAlignment = Alignment.Center
+					) {
+						Text(
+							text = soundBoardTitle,
+							style = MaterialTheme.typography.headlineMedium,
+							color = MaterialTheme.colorScheme.onPrimaryContainer,
+							textAlign = TextAlign.Center,
+							modifier = Modifier.padding(16.dp)
+						)
+					}
 
-				BoardGrid(
-					items = items,
-					fileStorageRepository = fileStorageRepository,
-					onItemClick = { index -> viewModel.playSound(items[index]) },
-					modifier = modifier,
-				)
+					BoardGrid(
+						items = items,
+						fileStorageRepository = fileStorageRepository,
+						onItemClick = { index -> viewModel.playSound(items[index]) },
+						modifier = modifier,
+					)
+				}
 			}
 		}
 	}

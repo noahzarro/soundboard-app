@@ -20,9 +20,12 @@ class BoardViewModel(context: Context, private val soundBoardId: String) : ViewM
 
 	private val soundBoardItemsMutable = MutableStateFlow<ViewState<List<SoundItems>>>(ViewState.Loading)
 	val soundBoardItems = soundBoardItemsMutable.asStateFlow()
+	private val soundBoardNameMutable = MutableStateFlow<String?>(null)
+	val soundBoardName = soundBoardNameMutable.asStateFlow()
 
 	init {
 		loadSoundBoardItems()
+		loadBoardName()
 	}
 
 	private fun loadSoundBoardItems() {
@@ -30,6 +33,13 @@ class BoardViewModel(context: Context, private val soundBoardId: String) : ViewM
 
 			val items = databaseRepository.getSoundItemsByBoardId(soundBoardId)
 			soundBoardItemsMutable.value = ViewState.Success(items)
+		}
+	}
+
+	private fun loadBoardName() {
+		viewModelScope.launch {
+			val board = databaseRepository.getSoundboardById(soundBoardId)
+			soundBoardNameMutable.value = board?.title ?: "Unknown Soundboard"
 		}
 	}
 
