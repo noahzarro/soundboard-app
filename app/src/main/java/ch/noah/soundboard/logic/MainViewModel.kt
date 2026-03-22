@@ -11,7 +11,6 @@ import ch.noah.soundboard.database.SoundBoards
 import ch.noah.soundboard.networking.NetworkRepository
 import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -25,8 +24,11 @@ class MainViewModel(context: Context) : ViewModel() {
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
 	init {
-		load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
-		loadFromDisk()
+		viewModelScope.launch {
+			load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
+			load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/attila.json")
+			loadFromDisk()
+		}
 	}
 
 	fun update() {
@@ -51,11 +53,9 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	private fun loadFromDisk() {
-		viewModelScope.launch {
-			val soundBoards = databaseRepository.getAllSoundboards()
-			soundBoardsMutable.value = ViewState.Success(soundBoards)
-		}
+	private suspend fun loadFromDisk() {
+		val soundBoards = databaseRepository.getAllSoundboards()
+		soundBoardsMutable.value = ViewState.Success(soundBoards)
 	}
 
 	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: String?) {
@@ -67,7 +67,7 @@ class MainViewModel(context: Context) : ViewModel() {
 
 		val newId = id ?: java.util.UUID.randomUUID().toString()
 
-		databaseRepository.updateSoundboard(
+		databaseRepository.insertSoundboard(
 			id = newId,
 			title = soundBoardDto.title,
 			version = soundBoardDto.version,
@@ -90,32 +90,27 @@ class MainViewModel(context: Context) : ViewModel() {
 				id = uuid,
 				boardId = newId,
 				name = item.name,
-				soundFile = item.soundPath,
-				imageFile = item.imagePath
+				soundFile = item.getSoundFileName(),
+				imageFile = item.getImageFileName()
 			)
 		}
 	}
 
-	fun load(configUrl: String) {
-		viewModelScope.launch {
+	suspend fun load(configUrl: String) {
+		try {
+			val soundBoard =
+				NetworkRepository.api.getSoundBoard(configUrl)
+			Log.d(
+				"MainViewModel",
+				"Loaded soundboard: ${soundBoard.title} with ${soundBoard.items.size} items"
+			)
 
-			delay(2000)
+			val existingSoundBoard = databaseRepository.getSoundboardByConfigUrl(configUrl)
 
-			try {
-				val soundBoard =
-					NetworkRepository.api.getSoundBoard(configUrl)
-				Log.d(
-					"MainViewModel",
-					"Loaded soundboard: ${soundBoard.title} with ${soundBoard.items.size} items"
-				)
+			updateSoundBoard(soundBoard, existingSoundBoard?.id)
 
-				val existingSoundBoard = databaseRepository.getSoundboardByConfigUrl(configUrl)
-
-				updateSoundBoard(soundBoard, existingSoundBoard?.id)
-
-			} catch (e: Exception) {
-				Log.e("MainViewModel", "Error loading soundboard", e)
-			}
+		} catch (e: Exception) {
+			Log.e("MainViewModel", "Error loading soundboard", e)
 		}
 	}
 
