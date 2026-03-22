@@ -3,7 +3,7 @@ CREATE TABLE soundBoards (
     id TEXT NOT NULL PRIMARY KEY,
     title TEXT NOT NULL,
     version TEXT NOT NULL,
-    rootUrl TEXT NOT NULL
+    configUrl TEXT NOT NULL
 );
 
 -- SoundItems table with UUID and foreign key to soundBoards
@@ -23,13 +23,16 @@ SELECT * FROM soundBoards;
 selectBoardById:
 SELECT * FROM soundBoards WHERE id = ?;
 
+selectBoardByConfigUrl:
+SELECT * FROM soundBoards WHERE configUrl = ?;
+
 insertBoard:
-INSERT INTO soundBoards(id, title, version, rootUrl)
+INSERT INTO soundBoards(id, title, version, configUrl)
 VALUES (?, ?, ?, ?);
 
 updateBoard:
 UPDATE soundBoards
-SET title = ?, version = ?, rootUrl = ?
+SET title = ?, version = ?, configUrl = ?
 WHERE id = ?;
 
 deleteBoardById:

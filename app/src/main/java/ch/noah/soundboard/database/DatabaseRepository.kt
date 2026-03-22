@@ -25,6 +25,10 @@ class DatabaseRepository(context: Context) {
 		queries.selectBoardById(id).executeAsOneOrNull()
 	}
 
+	suspend fun getSoundboardByConfigUrl(configUrl: String): SoundBoards? = withContext(Dispatchers.IO) {
+		queries.selectBoardByConfigUrl(configUrl).executeAsOneOrNull()
+	}
+
 	suspend fun insertSoundboard(id: String, title: String, version: String, rootUrl: String) = withContext(Dispatchers.IO) {
 		queries.insertBoard(id, title, version, rootUrl)
 	}
@@ -54,9 +58,10 @@ class DatabaseRepository(context: Context) {
 		queries.selectItemsByBoardId(boardId).executeAsList()
 	}
 
-	suspend fun insertSoundItem(id: String, boardId: String, name: String, soundFile: String, imageFile: String) = withContext(Dispatchers.IO) {
-		queries.insertItem(id, boardId, name, soundFile, imageFile)
-	}
+	suspend fun insertSoundItem(id: String, boardId: String, name: String, soundFile: String, imageFile: String) =
+		withContext(Dispatchers.IO) {
+			queries.insertItem(id, boardId, name, soundFile, imageFile)
+		}
 
 	suspend fun updateSoundItem(id: String, name: String, soundFile: String, imageFile: String) = withContext(Dispatchers.IO) {
 		queries.updateItem(name, soundFile, imageFile, id)

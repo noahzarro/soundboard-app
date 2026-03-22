@@ -1,7 +1,6 @@
 package ch.noah.soundboard.logic
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -12,14 +11,12 @@ import ch.noah.soundboard.database.SoundBoards
 import ch.noah.soundboard.networking.NetworkRepository
 import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(context: Context) : ViewModel() {
-
-	//private val stateMutable = MutableStateFlow<Todo?>(null)
-	//val state: StateFlow<Todo?> = _state
 
 	private val databaseRepository = DatabaseRepository(context)
 	private val fileStorageRepository = FileStorageRepository(context)
@@ -28,7 +25,7 @@ class MainViewModel(context: Context) : ViewModel() {
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
 	init {
-		//load()
+		load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
 		loadFromDisk()
 	}
 
@@ -37,7 +34,7 @@ class MainViewModel(context: Context) : ViewModel() {
 			val soundBoards = databaseRepository.getAllSoundboards()
 			soundBoards.forEach { existingSoundBoard ->
 				val updatedSoundBoard = try {
-					NetworkRepository.api.getSoundBoard(existingSoundBoard.url)
+					NetworkRepository.api.getSoundBoard(existingSoundBoard.configUrl)
 				} catch (e: Exception) {
 					Log.e("MainViewModel", "Error updating soundboard with id ${existingSoundBoard.id}", e)
 					null
@@ -61,57 +58,60 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: String) {
+	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: String?) {
+
+		id?.let {
+			databaseRepository.deleteSoundboardById(id)
+			databaseRepository.deleteSoundItemsByBoardId(id)
+		}
+
+		val newId = id ?: java.util.UUID.randomUUID().toString()
 
 		databaseRepository.updateSoundboard(
-			id = id,
+			id = newId,
 			title = soundBoardDto.title,
 			version = soundBoardDto.version,
-			rootUrl = soundBoardDto.rootUrl
+			rootUrl = soundBoardDto.configUrl
 		)
 
-		databaseRepository.deleteSoundItemsByBoardId(id)
-
-		soundBoardDto.items.forEachIndexed { index, item ->
+		soundBoardDto.items.forEach { item ->
 			val uuid = java.util.UUID.randomUUID().toString()
-			fileStorageRepository.downloadSoundFile(soundBoardDto.rootUrl + "/" + item.soundPath, id, index)
-			fileStorageRepository.downloadImageFile(soundBoardDto.rootUrl + "/" + item.imagePath, id, index)
+			fileStorageRepository.downloadSoundFile(
+				uuid,
+				item.getSoundFileName(),
+				soundBoardDto.getRootUrl() + "/" + item.soundPath
+			)
+			fileStorageRepository.downloadImageFile(
+				uuid,
+				item.getImageFileName(),
+				soundBoardDto.getRootUrl() + "/" + item.imagePath
+			)
+			databaseRepository.insertSoundItem(
+				id = uuid,
+				boardId = newId,
+				name = item.name,
+				soundFile = item.soundPath,
+				imageFile = item.imagePath
+			)
 		}
 	}
 
-	fun load() {
+	fun load(configUrl: String) {
 		viewModelScope.launch {
+
+			delay(2000)
+
 			try {
 				val soundBoard =
-					NetworkRepository.api.getSoundBoard("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
+					NetworkRepository.api.getSoundBoard(configUrl)
 				Log.d(
 					"MainViewModel",
 					"Loaded soundboard: ${soundBoard.title} with ${soundBoard.items.size} items"
 				)
 
-				// For this example, we'll use a hardcoded soundboard ID
-				// In a real app, you would get this from the database or generate it
-				val soundboardId = 1L
+				val existingSoundBoard = databaseRepository.getSoundboardByConfigUrl(configUrl)
 
-				soundBoard.items.forEachIndexed { index, item ->
-					fileStorageRepository.downloadSoundFile(soundBoard.rootUrl + "/" + item.soundPath, soundboardId, index)
-				}
-
-				soundBoard.items.firstOrNull()?.let {
-					fileStorageRepository.getSoundFile(soundboardId, 0)?.let { file ->
-
-						val mediaPlayer = MediaPlayer().apply {
-							setDataSource(file.path)
-							prepare()
-							start()
-
-							// Optional: Release resources when playback completes
-							setOnCompletionListener {
-								release()
-							}
-						}
-					}
-				}
+				updateSoundBoard(soundBoard, existingSoundBoard?.id)
 
 			} catch (e: Exception) {
 				Log.e("MainViewModel", "Error loading soundboard", e)

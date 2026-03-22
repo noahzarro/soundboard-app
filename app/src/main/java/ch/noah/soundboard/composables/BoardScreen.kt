@@ -2,20 +2,10 @@ package ch.noah.soundboard.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,14 +17,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ch.noah.soundboard.data.ViewState
+import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.logic.BoardViewModel
 import ch.noah.soundboard.logic.BoardViewModelFactory
-import ch.noah.soundboard.networking.SoundboadItemDto
 import ch.noah.soundboard.ui.theme.SoundboadTheme
 
 @Composable
 fun BoardScreen(
-	soundBoardId: Long,
+	soundBoardId: String,
 	modifier: Modifier = Modifier,
 	viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(LocalContext.current, soundBoardId)),
 ) {
@@ -50,26 +40,14 @@ fun BoardScreen(
 				modifier = modifier
 			)
 		}
-		is ViewState.Success -> {
-			val items = (soundBoardItemsState as ViewState.Success<List<SoundboadItemDto>>).data
+		is ViewState.Success, is ViewState.SilentLoading -> {
+			val items = soundBoardItemsState.dataOrNull() ?: emptyList()
 			if (items.isEmpty()) {
 				BoardEmptyScreen(modifier = modifier)
 			} else {
 				BoardGrid(
 					items = items,
-					onItemClick = { index -> viewModel.playSound(index) },
-					modifier = modifier
-				)
-			}
-		}
-		is ViewState.SilentLoading -> {
-			val items = (soundBoardItemsState as ViewState.SilentLoading<List<SoundboadItemDto>>).data
-			if (items.isEmpty()) {
-				BoardEmptyScreen(modifier = modifier)
-			} else {
-				BoardGrid(
-					items = items,
-					onItemClick = { index -> viewModel.playSound(index) },
+					onItemClick = { index -> viewModel.playSound(items[index]) },
 					modifier = modifier
 				)
 			}
@@ -79,9 +57,9 @@ fun BoardScreen(
 
 @Composable
 private fun BoardGrid(
-	items: List<SoundboadItemDto>,
+	items: List<SoundItems>,
 	onItemClick: (Int) -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	LazyVerticalGrid(
 		columns = GridCells.Fixed(2),
@@ -93,7 +71,6 @@ private fun BoardGrid(
 		items(items.size) { index ->
 			SoundItem(
 				item = items[index],
-				index = index,
 				onClick = { onItemClick(index) }
 			)
 		}
@@ -102,10 +79,9 @@ private fun BoardGrid(
 
 @Composable
 private fun SoundItem(
-	item: SoundboadItemDto,
-	index: Int,
+	item: SoundItems,
 	onClick: () -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	Card(
 		modifier = modifier
@@ -152,7 +128,7 @@ private fun BoardLoadingScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun BoardErrorScreen(
 	message: String,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	Box(
 		modifier = modifier.fillMaxSize(),

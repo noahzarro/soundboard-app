@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
+import java.net.URL
 
 class FileStorageRepository(private val context: Context) {
 
@@ -90,5 +91,37 @@ class FileStorageRepository(private val context: Context) {
 	// Check if sound exists
 	suspend fun soundExists(itemUUID: String, filename: String): Boolean = withContext(Dispatchers.IO) {
 		File(File(filesDir, itemUUID), filename).exists()
+	}
+
+	// Download and save image file from URL
+	suspend fun downloadImageFile(itemUUID: String, filename: String, url: String): File = withContext(Dispatchers.IO) {
+		val itemDir = File(filesDir, itemUUID)
+		if (!itemDir.exists()) {
+			itemDir.mkdirs()
+		}
+		
+		val imageFile = File(itemDir, filename)
+		URL(url).openStream().use { input ->
+			imageFile.outputStream().use { output ->
+				input.copyTo(output)
+			}
+		}
+		imageFile
+	}
+
+	// Download and save sound file from URL
+	suspend fun downloadSoundFile(itemUUID: String, filename: String, url: String): File = withContext(Dispatchers.IO) {
+		val itemDir = File(filesDir, itemUUID)
+		if (!itemDir.exists()) {
+			itemDir.mkdirs()
+		}
+		
+		val soundFile = File(itemDir, filename)
+		URL(url).openStream().use { input ->
+			soundFile.outputStream().use { output ->
+				input.copyTo(output)
+			}
+		}
+		soundFile
 	}
 }

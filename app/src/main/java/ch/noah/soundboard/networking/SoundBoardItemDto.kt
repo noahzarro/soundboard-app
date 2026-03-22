@@ -8,7 +8,11 @@ data class SoundboadItemDto(
 	val soundPath: String,
 	val imagePath: String,
 ) {
-	fun getFileName(): String {
-		return name + soundPath.substringAfterLast(".")
+	fun getSoundFileName(): String {
+		return soundPath.substringAfterLast("/")
+	}
+
+	fun getImageFileName(): String {
+		return imagePath.substringAfterLast("/")
 	}
 }
