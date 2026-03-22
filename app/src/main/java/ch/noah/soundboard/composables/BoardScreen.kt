@@ -26,8 +26,11 @@ import ch.noah.soundboard.ui.theme.SoundboadTheme
 fun BoardScreen(
 	soundBoardId: String,
 	modifier: Modifier = Modifier,
-	viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(LocalContext.current, soundBoardId)),
 ) {
+	val viewModel: BoardViewModel = viewModel(
+		key = soundBoardId,
+		factory = BoardViewModelFactory(LocalContext.current, soundBoardId)
+	)
 	val soundBoardItemsState by viewModel.soundBoardItems.collectAsState()
 
 	when (soundBoardItemsState) {
