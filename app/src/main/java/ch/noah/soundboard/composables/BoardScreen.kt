@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,7 +22,10 @@ import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.logic.BoardViewModel
 import ch.noah.soundboard.logic.BoardViewModelFactory
+import ch.noah.soundboard.storage.FileStorageRepository
 import ch.noah.soundboard.ui.theme.SoundboadTheme
+import coil3.compose.AsyncImage
+import java.io.File
 
 @Composable
 fun BoardScreen(
@@ -48,10 +53,14 @@ fun BoardScreen(
 			if (items.isEmpty()) {
 				BoardEmptyScreen(modifier = modifier)
 			} else {
+				val context = LocalContext.current
+				val fileStorageRepository = remember { FileStorageRepository(context) }
+
 				BoardGrid(
 					items = items,
+					fileStorageRepository = fileStorageRepository,
 					onItemClick = { index -> viewModel.playSound(items[index]) },
-					modifier = modifier
+					modifier = modifier,
 				)
 			}
 		}
@@ -61,6 +70,7 @@ fun BoardScreen(
 @Composable
 private fun BoardGrid(
 	items: List<SoundItems>,
+	fileStorageRepository: FileStorageRepository,
 	onItemClick: (Int) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
@@ -74,7 +84,8 @@ private fun BoardGrid(
 		items(items.size) { index ->
 			SoundItem(
 				item = items[index],
-				onClick = { onItemClick(index) }
+				onClick = { onItemClick(index) },
+				fileStorageRepository = fileStorageRepository,
 			)
 		}
 	}
@@ -83,9 +94,15 @@ private fun BoardGrid(
 @Composable
 private fun SoundItem(
 	item: SoundItems,
+	fileStorageRepository: FileStorageRepository,
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
+
+	val imagePath = remember(item.id, item.imageFile) {
+		fileStorageRepository.getImagePath(item.id, item.imageFile)
+	}
+
 	Card(
 		modifier = modifier
 			.aspectRatio(1f)
@@ -93,18 +110,29 @@ private fun SoundItem(
 		elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 	) {
 		Box(
-			modifier = Modifier
-				.fillMaxSize()
-				.background(MaterialTheme.colorScheme.primaryContainer),
-			contentAlignment = Alignment.Center
+			modifier = Modifier.fillMaxSize()
 		) {
-			Text(
-				text = item.name,
-				style = MaterialTheme.typography.titleMedium,
-				color = MaterialTheme.colorScheme.onPrimaryContainer,
-				textAlign = TextAlign.Center,
-				modifier = Modifier.padding(8.dp)
+			AsyncImage(
+				model = File(imagePath),
+				contentDescription = item.name,
+				modifier = Modifier.fillMaxSize(),
+				contentScale = ContentScale.Crop
 			)
+			// Overlay text on the image
+			Box(
+				modifier = Modifier
+					.fillMaxSize()
+					.background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)),
+				contentAlignment = Alignment.Center
+			) {
+				Text(
+					text = item.name,
+					style = MaterialTheme.typography.titleMedium,
+					color = MaterialTheme.colorScheme.onPrimaryContainer,
+					textAlign = TextAlign.Center,
+					modifier = Modifier.padding(8.dp)
+				)
+			}
 		}
 	}
 }
