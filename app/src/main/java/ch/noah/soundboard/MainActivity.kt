@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
 			SoundboadTheme {
 				Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 					MainScreen(
-						modifier = Modifier.padding(innerPadding)
+						modifier = Modifier
 					)
 				}
 			}

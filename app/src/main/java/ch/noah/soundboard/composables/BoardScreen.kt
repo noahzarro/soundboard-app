@@ -59,9 +59,10 @@ fun BoardScreen(
 				val fileStorageRepository = remember { FileStorageRepository(context) }
 				Column(modifier = Modifier.fillMaxSize()) {
 					Box(
-						modifier = modifier
+						modifier = Modifier
 							.fillMaxWidth()
-							.background(MaterialTheme.colorScheme.primaryContainer),
+							.background(MaterialTheme.colorScheme.primaryContainer)
+							.statusBarsPadding(),
 						contentAlignment = Alignment.Center
 					) {
 						Text(
