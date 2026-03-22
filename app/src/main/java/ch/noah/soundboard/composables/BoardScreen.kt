@@ -1,6 +1,5 @@
 package ch.noah.soundboard.composables
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -104,35 +103,29 @@ private fun SoundItem(
 	}
 
 	Card(
-		modifier = modifier
-			.aspectRatio(1f)
-			.clickable(onClick = onClick),
 		elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 	) {
-		Box(
-			modifier = Modifier.fillMaxSize()
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.clickable(onClick = onClick),
+			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			AsyncImage(
 				model = File(imagePath),
 				contentDescription = item.name,
-				modifier = Modifier.fillMaxSize(),
+				modifier = Modifier
+					.fillMaxWidth()
+					.aspectRatio(1f),
 				contentScale = ContentScale.Crop
 			)
-			// Overlay text on the image
-			Box(
-				modifier = Modifier
-					.fillMaxSize()
-					.background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)),
-				contentAlignment = Alignment.Center
-			) {
-				Text(
-					text = item.name,
-					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.onPrimaryContainer,
-					textAlign = TextAlign.Center,
-					modifier = Modifier.padding(8.dp)
-				)
-			}
+			Text(
+				text = item.name,
+				style = MaterialTheme.typography.titleMedium,
+				color = MaterialTheme.colorScheme.onPrimaryContainer,
+				textAlign = TextAlign.Center,
+				modifier = Modifier.padding(8.dp)
+			)
 		}
 	}
 }
