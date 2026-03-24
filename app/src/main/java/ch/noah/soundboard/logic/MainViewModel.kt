@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import ch.noah.soundboard.data.AddScreenViewState
 import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.database.SoundBoards
@@ -23,10 +24,13 @@ class MainViewModel(context: Context) : ViewModel() {
 	private val soundBoardsMutable = MutableStateFlow<ViewState<List<SoundBoards>>>(ViewState.Loading)
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
+	private val addScreenViewStateMutable = MutableStateFlow<AddScreenViewState>(AddScreenViewState.Success)
+	val addScreenViewState = addScreenViewStateMutable.asStateFlow()
+
 	init {
 		viewModelScope.launch {
-			load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
-			load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/attila.json")
+			//load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
+			//load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/attila.json")
 			loadFromDisk()
 		}
 	}
@@ -111,6 +115,22 @@ class MainViewModel(context: Context) : ViewModel() {
 
 		} catch (e: Exception) {
 			Log.e("MainViewModel", "Error loading soundboard", e)
+			throw e
+		}
+	}
+
+	fun addSoundboard(url: String) {
+		viewModelScope.launch {
+			addScreenViewStateMutable.value = AddScreenViewState.Loading
+			try {
+				load(url)
+				loadFromDisk()
+				addScreenViewStateMutable.value = AddScreenViewState.Success
+			} catch (e: Exception) {
+				addScreenViewStateMutable.value = AddScreenViewState.Error(
+					e.message ?: "Failed to load soundboard"
+				)
+			}
 		}
 	}
 

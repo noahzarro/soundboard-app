@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ch.noah.soundboard.data.ViewState
-import ch.noah.soundboard.database.SoundBoards
 import ch.noah.soundboard.logic.MainViewModel
 import ch.noah.soundboard.logic.MainViewModelFactory
 import ch.noah.soundboard.ui.theme.SoundboadTheme
@@ -44,33 +43,23 @@ fun MainScreen(
 				modifier = modifier
 			)
 		}
-		is ViewState.Success -> {
-			val soundBoards = (soundBoardsState as ViewState.Success<List<SoundBoards>>).data
+		is ViewState.Success, is ViewState.SilentLoading -> {
+			val soundBoards = soundBoardsState.dataOrNull() ?: emptyList()
 			if (soundBoards.isEmpty()) {
 				EmptyScreen(modifier = modifier)
 			} else {
-				val pagerState = rememberPagerState(pageCount = { soundBoards.size })
+				val numberOfBoards = soundBoards.size
+				val pagerState = rememberPagerState(pageCount = { numberOfBoards + 1 })
 
 				HorizontalPager(
 					state = pagerState,
 					modifier = modifier.fillMaxSize()
 				) { page ->
-					BoardScreen(soundBoardId = soundBoards[page].id)
-				}
-			}
-		}
-		is ViewState.SilentLoading -> {
-			val soundBoards = (soundBoardsState as ViewState.SilentLoading<List<SoundBoards>>).data
-			if (soundBoards.isEmpty()) {
-				EmptyScreen(modifier = modifier)
-			} else {
-				val pagerState = rememberPagerState(pageCount = { soundBoards.size })
-
-				HorizontalPager(
-					state = pagerState,
-					modifier = modifier.fillMaxSize()
-				) { page ->
-					BoardScreen(soundBoardId = soundBoards[page].id)
+					if (page < numberOfBoards) {
+						BoardScreen(soundBoardId = soundBoards[page].id)
+					} else {
+						AddScreen(viewModel = viewModel)
+					}
 				}
 			}
 		}
