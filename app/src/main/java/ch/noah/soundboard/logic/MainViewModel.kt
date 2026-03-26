@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import ch.noah.soundboard.data.AddScreenViewState
 import ch.noah.soundboard.data.ViewState
+import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.database.SoundBoards
 import ch.noah.soundboard.networking.NetworkRepository
@@ -22,10 +22,10 @@ class MainViewModel(context: Context) : ViewModel() {
 	private val databaseRepository = DatabaseRepository(context)
 	private val fileStorageRepository = FileStorageRepository(context)
 
-	private val soundBoardsMutable = MutableStateFlow<ViewState<List<SoundBoards>>>(ViewState.Loading)
+	private val soundBoardsMutable = MutableStateFlow<ViewStateWithData<List<SoundBoards>>>(ViewStateWithData.Loading)
 	val soundBoards = soundBoardsMutable.asStateFlow()
 
-	private val addScreenViewStateMutable = MutableStateFlow<AddScreenViewState>(AddScreenViewState.Success)
+	private val addScreenViewStateMutable = MutableStateFlow<ViewState>(ViewState.Success)
 	val addScreenViewState = addScreenViewStateMutable.asStateFlow()
 
 	init {
@@ -68,6 +68,10 @@ class MainViewModel(context: Context) : ViewModel() {
 
 					if (updatedSoundBoard != null) {
 						if (updatedSoundBoard.isNewerThan(SoundboadDto.fromDatabaseEntity(existingSoundBoard))) {
+							Log.d(
+								"MainViewModel",
+								"Updating soundboard ${existingSoundBoard.title} to version ${updatedSoundBoard.version}"
+							)
 							updateSoundBoard(updatedSoundBoard, existingSoundBoard.id)
 						}
 					}
@@ -84,7 +88,7 @@ class MainViewModel(context: Context) : ViewModel() {
 
 	private suspend fun loadFromDisk() {
 		val soundBoards = databaseRepository.getAllSoundboards()
-		soundBoardsMutable.value = ViewState.Success(soundBoards)
+		soundBoardsMutable.value = ViewStateWithData.Success(soundBoards)
 	}
 
 	private suspend fun updateSoundBoard(soundBoardDto: SoundboadDto, id: String?) {
@@ -146,13 +150,13 @@ class MainViewModel(context: Context) : ViewModel() {
 
 	fun addSoundboard(url: String) {
 		viewModelScope.launch {
-			addScreenViewStateMutable.value = AddScreenViewState.Loading
+			addScreenViewStateMutable.value = ViewState.Loading
 			try {
 				load(url)
 				loadFromDisk()
-				addScreenViewStateMutable.value = AddScreenViewState.Success
+				addScreenViewStateMutable.value = ViewState.Success
 			} catch (e: Exception) {
-				addScreenViewStateMutable.value = AddScreenViewState.Error(
+				addScreenViewStateMutable.value = ViewState.Error(
 					e.message ?: "Failed to load soundboard"
 				)
 			}

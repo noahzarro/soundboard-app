@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ch.noah.soundboard.data.ViewState
+import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.logic.MainViewModel
 import ch.noah.soundboard.logic.MainViewModelFactory
 import ch.noah.soundboard.ui.theme.SoundboadTheme
@@ -35,16 +35,16 @@ fun MainScreen(
 	val soundBoardsState by viewModel.soundBoards.collectAsState()
 
 	when (soundBoardsState) {
-		is ViewState.Loading -> {
+		is ViewStateWithData.Loading -> {
 			LoadingScreen(modifier = modifier)
 		}
-		is ViewState.Error -> {
+		is ViewStateWithData.Error -> {
 			ErrorScreen(
-				message = (soundBoardsState as ViewState.Error).message,
+				message = (soundBoardsState as ViewStateWithData.Error).message,
 				modifier = modifier
 			)
 		}
-		is ViewState.Success, is ViewState.SilentLoading, is ViewState.SilentError -> {
+		is ViewStateWithData.Success, is ViewStateWithData.SilentLoading, is ViewStateWithData.SilentError -> {
 			val soundBoards = soundBoardsState.dataOrNull() ?: emptyList()
 
 			val numberOfBoards = soundBoards.size
@@ -60,10 +60,10 @@ fun MainScreen(
 					AddScreen(viewModel = viewModel)
 				}
 			}
-			if (soundBoardsState is ViewState.SilentError) {
+			if (soundBoardsState is ViewStateWithData.SilentError) {
 				Toast.makeText(
 					LocalContext.current,
-					(soundBoardsState as ViewState.SilentError).message,
+					(soundBoardsState as ViewStateWithData.SilentError).message,
 					Toast.LENGTH_LONG
 				).show()
 			}

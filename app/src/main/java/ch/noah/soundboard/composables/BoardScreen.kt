@@ -10,10 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -22,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ch.noah.soundboard.data.ViewState
+import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.logic.BoardViewModel
 import ch.noah.soundboard.logic.BoardViewModelFactory
@@ -37,7 +34,7 @@ import java.io.File
 fun BoardScreen(
 	soundBoardId: String,
 	modifier: Modifier = Modifier,
-	viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(LocalContext.current)),
+	mainViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(LocalContext.current)),
 ) {
 	val viewModel: BoardViewModel = viewModel(
 		key = soundBoardId,
@@ -45,18 +42,19 @@ fun BoardScreen(
 	)
 	val soundBoardItemsState by viewModel.soundBoardItems.collectAsState()
 	val soundBoardName by viewModel.soundBoardName.collectAsState()
+	var showDeleteDialog by remember { mutableStateOf(false) }
 
 	when (soundBoardItemsState) {
-		is ViewState.Loading -> {
+		is ViewStateWithData.Loading -> {
 			BoardLoadingScreen(modifier = modifier)
 		}
-		is ViewState.Error -> {
+		is ViewStateWithData.Error -> {
 			BoardErrorScreen(
-				message = (soundBoardItemsState as ViewState.Error).message,
+				message = (soundBoardItemsState as ViewStateWithData.Error).message,
 				modifier = modifier
 			)
 		}
-		is ViewState.Success, is ViewState.SilentLoading, is ViewState.SilentError -> {
+		is ViewStateWithData.Success, is ViewStateWithData.SilentLoading, is ViewStateWithData.SilentError -> {
 			val items = soundBoardItemsState.dataOrNull() ?: emptyList()
 			val soundBoardTitle = soundBoardName
 			if (items.isEmpty() || soundBoardTitle == null) {
@@ -74,7 +72,7 @@ fun BoardScreen(
 					) {
 						IconButton(
 							onClick = {
-								Toast.makeText(context, "Delete soundboard not implemented yet", Toast.LENGTH_SHORT).show()
+								showDeleteDialog = true
 							}
 						) {
 							Icon(
@@ -110,10 +108,36 @@ fun BoardScreen(
 						modifier = modifier,
 					)
 				}
-				if (soundBoardItemsState is ViewState.SilentError) {
+
+				if (showDeleteDialog) {
+					AlertDialog(
+						onDismissRequest = { showDeleteDialog = false },
+						title = { Text("Delete Soundboard") },
+						text = { Text("Are you sure you want to delete this soundboard? This action cannot be undone.") },
+						confirmButton = {
+							TextButton(
+								onClick = {
+									showDeleteDialog = false
+									mainViewModel.deleteSoundboard(soundBoardId)
+								}
+							) {
+								Text("Delete")
+							}
+						},
+						dismissButton = {
+							TextButton(
+								onClick = { showDeleteDialog = false }
+							) {
+								Text("Cancel")
+							}
+						}
+					)
+				}
+
+				if (soundBoardItemsState is ViewStateWithData.SilentError) {
 					Toast.makeText(
 						LocalContext.current,
-						(soundBoardItemsState as ViewState.SilentError).message,
+						(soundBoardItemsState as ViewStateWithData.SilentError).message,
 						Toast.LENGTH_LONG
 					).show()
 				}

@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import ch.noah.soundboard.data.ViewState
+import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.database.DatabaseRepository
 import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.storage.FileStorageRepository
@@ -20,7 +20,7 @@ class BoardViewModel(context: Context, private val soundBoardId: String) : ViewM
 	private val fileStorageRepository = FileStorageRepository(context)
 	private val databaseRepository = DatabaseRepository(context)
 
-	private val soundBoardItemsMutable = MutableStateFlow<ViewState<List<SoundItems>>>(ViewState.Loading)
+	private val soundBoardItemsMutable = MutableStateFlow<ViewStateWithData<List<SoundItems>>>(ViewStateWithData.Loading)
 	val soundBoardItems = soundBoardItemsMutable.asStateFlow()
 	private val soundBoardNameMutable = MutableStateFlow<String?>(null)
 	val soundBoardName = soundBoardNameMutable.asStateFlow()
@@ -34,7 +34,7 @@ class BoardViewModel(context: Context, private val soundBoardId: String) : ViewM
 		viewModelScope.launch {
 			try {
 				val items = databaseRepository.getSoundItemsByBoardId(soundBoardId)
-				soundBoardItemsMutable.value = ViewState.Success(items)
+				soundBoardItemsMutable.value = ViewStateWithData.Success(items)
 			} catch (e: Exception) {
 				Log.e("BoardViewModel", "Error loading soundboard items for board id $soundBoardId", e)
 				soundBoardItemsMutable.update {

@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ch.noah.soundboard.data.AddScreenViewState
+import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.logic.MainViewModel
 import ch.noah.soundboard.logic.MainViewModelFactory
 
@@ -49,7 +49,7 @@ fun AddScreen(
 			contentAlignment = Alignment.Center
 		) {
 			when (addScreenViewState) {
-				is AddScreenViewState.Success, is AddScreenViewState.Error -> {
+				is ViewState.Success, is ViewState.Error -> {
 					Column(
 						modifier = Modifier.fillMaxWidth(),
 						horizontalAlignment = Alignment.CenterHorizontally,
@@ -63,13 +63,13 @@ fun AddScreen(
 							placeholder = { Text("https://example.com/soundboard.json") },
 							modifier = Modifier.fillMaxWidth(),
 							singleLine = true,
-							isError = addScreenViewState is AddScreenViewState.Error
+							isError = addScreenViewState is ViewState.Error
 						)
 
-						if (addScreenViewState is AddScreenViewState.Error) {
+						if (addScreenViewState is ViewState.Error) {
 							Spacer(modifier = Modifier.height(8.dp))
 							Text(
-								text = (addScreenViewState as AddScreenViewState.Error).message,
+								text = (addScreenViewState as ViewState.Error).message,
 								color = MaterialTheme.colorScheme.error,
 								style = MaterialTheme.typography.bodyMedium,
 								textAlign = TextAlign.Center
@@ -95,7 +95,7 @@ fun AddScreen(
 						}
 					}
 				}
-				is AddScreenViewState.Loading -> {
+				is ViewState.Loading -> {
 					Column(
 						horizontalAlignment = Alignment.CenterHorizontally
 					) {
