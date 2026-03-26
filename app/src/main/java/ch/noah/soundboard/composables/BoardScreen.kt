@@ -41,7 +41,7 @@ fun BoardScreen(
 		factory = BoardViewModelFactory(LocalContext.current, soundBoardId)
 	)
 	val soundBoardItemsState by viewModel.soundBoardItems.collectAsState()
-	val soundBoardName by viewModel.soundBoardName.collectAsState()
+	val soundBoard by viewModel.soundBoard.collectAsState()
 	var showDeleteDialog by remember { mutableStateOf(false) }
 
 	when (soundBoardItemsState) {
@@ -56,7 +56,7 @@ fun BoardScreen(
 		}
 		is ViewStateWithData.Success, is ViewStateWithData.SilentLoading, is ViewStateWithData.SilentError -> {
 			val items = soundBoardItemsState.dataOrNull() ?: emptyList()
-			val soundBoardTitle = soundBoardName
+			val soundBoardTitle = soundBoard?.title
 			if (items.isEmpty() || soundBoardTitle == null) {
 				BoardEmptyScreen(modifier = modifier)
 			} else {
@@ -73,13 +73,13 @@ fun BoardScreen(
 						IconButton(
 							onClick = {
 								showDeleteDialog = true
-							}
+							},
+							modifier = Modifier.padding(start = 16.dp)
 						) {
 							Icon(
 								imageVector = Icons.Default.Delete,
 								contentDescription = "Delete soundboard",
 								modifier = Modifier
-									.padding(start = 16.dp)
 									.size(24.dp)
 							)
 						}
@@ -92,13 +92,20 @@ fun BoardScreen(
 								.padding(16.dp)
 								.weight(1f)
 						)
-						Icon(
-							imageVector = Icons.Default.Share,
-							contentDescription = "Share soundboard",
-							modifier = Modifier
-								.padding(end = 16.dp)
-								.size(24.dp)
-						)
+						IconButton(
+							onClick = {
+								val configUrl = soundBoard?.configUrl
+								// Todo: Implement share functionality
+							},
+							modifier = Modifier.padding(start = 16.dp)
+						) {
+							Icon(
+								imageVector = Icons.Default.Share,
+								contentDescription = "Share soundboard",
+								modifier = Modifier
+									.size(24.dp)
+							)
+						}
 					}
 
 					BoardGrid(
