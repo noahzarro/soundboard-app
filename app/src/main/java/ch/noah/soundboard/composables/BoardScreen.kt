@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -95,7 +96,18 @@ fun BoardScreen(
 						IconButton(
 							onClick = {
 								val configUrl = soundBoard?.configUrl
-								// Todo: Implement share functionality
+								val sharingText = configUrl?.let {
+									"Hound, check out my soundboard:\n$it"
+								}
+								sharingText?.let { text ->
+									val sendIntent = Intent().apply {
+										action = Intent.ACTION_SEND
+										putExtra(Intent.EXTRA_TEXT, text)
+										type = "text/plain"
+									}
+									val shareIntent = Intent.createChooser(sendIntent, null)
+									context.startActivity(shareIntent)
+								}
 							},
 							modifier = Modifier.padding(start = 16.dp)
 						) {
