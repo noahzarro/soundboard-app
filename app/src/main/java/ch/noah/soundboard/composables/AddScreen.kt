@@ -81,7 +81,7 @@ fun AddScreen(
 						FloatingActionButton(
 							onClick = {
 								if (urlText.isNotBlank()) {
-									viewModel.addSoundboard(urlText)
+									viewModel.addSoundboard(urlText.trim())
 								}
 							},
 							modifier = Modifier.size(72.dp)

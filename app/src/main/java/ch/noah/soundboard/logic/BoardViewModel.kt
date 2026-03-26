@@ -2,6 +2,7 @@ package ch.noah.soundboard.logic
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.storage.FileStorageRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BoardViewModel(context: Context, private val soundBoardId: String) : ViewModel() {
@@ -30,16 +32,27 @@ class BoardViewModel(context: Context, private val soundBoardId: String) : ViewM
 
 	private fun loadSoundBoardItems() {
 		viewModelScope.launch {
-
-			val items = databaseRepository.getSoundItemsByBoardId(soundBoardId)
-			soundBoardItemsMutable.value = ViewState.Success(items)
+			try {
+				val items = databaseRepository.getSoundItemsByBoardId(soundBoardId)
+				soundBoardItemsMutable.value = ViewState.Success(items)
+			} catch (e: Exception) {
+				Log.e("BoardViewModel", "Error loading soundboard items for board id $soundBoardId", e)
+				soundBoardItemsMutable.update {
+					it.toError("Failed to load soundboard items: ${e.message}")
+				}
+			}
 		}
 	}
 
 	private fun loadBoardName() {
 		viewModelScope.launch {
-			val board = databaseRepository.getSoundboardById(soundBoardId)
-			soundBoardNameMutable.value = board?.title ?: "Unknown Soundboard"
+			try {
+				val board = databaseRepository.getSoundboardById(soundBoardId)
+				soundBoardNameMutable.value = board?.title ?: "Unknown Soundboard"
+			} catch (e: Exception) {
+				Log.e("BoardViewModel", "Error loading soundboard name for id $soundBoardId", e)
+				soundBoardNameMutable.value = "Unknown Soundboard"
+			}
 		}
 	}
 

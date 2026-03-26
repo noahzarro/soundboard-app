@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,24 +44,28 @@ fun MainScreen(
 				modifier = modifier
 			)
 		}
-		is ViewState.Success, is ViewState.SilentLoading -> {
+		is ViewState.Success, is ViewState.SilentLoading, is ViewState.SilentError -> {
 			val soundBoards = soundBoardsState.dataOrNull() ?: emptyList()
-			if (soundBoards.isEmpty()) {
-				EmptyScreen(modifier = modifier)
-			} else {
-				val numberOfBoards = soundBoards.size
-				val pagerState = rememberPagerState(pageCount = { numberOfBoards + 1 })
 
-				HorizontalPager(
-					state = pagerState,
-					modifier = modifier.fillMaxSize()
-				) { page ->
-					if (page < numberOfBoards) {
-						BoardScreen(soundBoardId = soundBoards[page].id)
-					} else {
-						AddScreen(viewModel = viewModel)
-					}
+			val numberOfBoards = soundBoards.size
+			val pagerState = rememberPagerState(pageCount = { numberOfBoards + 1 })
+
+			HorizontalPager(
+				state = pagerState,
+				modifier = modifier.fillMaxSize()
+			) { page ->
+				if (page < numberOfBoards) {
+					BoardScreen(soundBoardId = soundBoards[page].id)
+				} else {
+					AddScreen(viewModel = viewModel)
 				}
+			}
+			if (soundBoardsState is ViewState.SilentError) {
+				Toast.makeText(
+					LocalContext.current,
+					(soundBoardsState as ViewState.SilentError).message,
+					Toast.LENGTH_LONG
+				).show()
 			}
 		}
 	}

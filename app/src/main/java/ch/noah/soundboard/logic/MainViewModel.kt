@@ -14,6 +14,7 @@ import ch.noah.soundboard.networking.SoundboadDto
 import ch.noah.soundboard.storage.FileStorageRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(context: Context) : ViewModel() {
@@ -32,27 +33,36 @@ class MainViewModel(context: Context) : ViewModel() {
 			//load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/stronghold.json")
 			//load("https://raw.githubusercontent.com/noahzarro/soundboad-data/refs/heads/main/attila.json")
 			loadFromDisk()
+			update()
 		}
 	}
 
 	fun update() {
 		viewModelScope.launch {
 			val soundBoards = databaseRepository.getAllSoundboards()
-			soundBoards.forEach { existingSoundBoard ->
-				val updatedSoundBoard = try {
-					NetworkRepository.api.getSoundBoard(existingSoundBoard.configUrl)
-				} catch (e: Exception) {
-					Log.e("MainViewModel", "Error updating soundboard with id ${existingSoundBoard.id}", e)
-					null
-				}
-
-				if (updatedSoundBoard != null) {
-					if (updatedSoundBoard.isNewerThan(SoundboadDto.fromDatabaseEntity(existingSoundBoard))) {
-						updateSoundBoard(updatedSoundBoard, existingSoundBoard.id)
+			var currentSoundBoardTitle = ""
+			try {
+				soundBoards.forEach { existingSoundBoard ->
+					currentSoundBoardTitle = existingSoundBoard.title
+					val updatedSoundBoard = try {
+						NetworkRepository.api.getSoundBoard(existingSoundBoard.configUrl)
+					} catch (e: Exception) {
+						Log.e("MainViewModel", "Error updating soundboard with id ${existingSoundBoard.id}", e)
+						null
 					}
 
+					if (updatedSoundBoard != null) {
+						if (updatedSoundBoard.isNewerThan(SoundboadDto.fromDatabaseEntity(existingSoundBoard))) {
+							updateSoundBoard(updatedSoundBoard, existingSoundBoard.id)
+						}
+					}
 				}
-
+				loadFromDisk()
+			} catch (e: Exception) {
+				Log.e("MainViewModel", "Error updating soundboard $currentSoundBoardTitle", e)
+				soundBoardsMutable.update {
+					it.toError(e.message + ". Failed to update soundboard $currentSoundBoardTitle")
+				}
 			}
 		}
 	}

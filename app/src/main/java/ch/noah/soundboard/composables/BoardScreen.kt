@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -49,7 +50,7 @@ fun BoardScreen(
 				modifier = modifier
 			)
 		}
-		is ViewState.Success, is ViewState.SilentLoading -> {
+		is ViewState.Success, is ViewState.SilentLoading, is ViewState.SilentError -> {
 			val items = soundBoardItemsState.dataOrNull() ?: emptyList()
 			val soundBoardTitle = soundBoardName
 			if (items.isEmpty() || soundBoardTitle == null) {
@@ -80,6 +81,13 @@ fun BoardScreen(
 						onItemClick = { index -> viewModel.playSound(items[index]) },
 						modifier = modifier,
 					)
+				}
+				if (soundBoardItemsState is ViewState.SilentError) {
+					Toast.makeText(
+						LocalContext.current,
+						(soundBoardItemsState as ViewState.SilentError).message,
+						Toast.LENGTH_LONG
+					).show()
 				}
 			}
 		}
