@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +26,8 @@ import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.logic.BoardViewModel
 import ch.noah.soundboard.logic.BoardViewModelFactory
+import ch.noah.soundboard.logic.MainViewModel
+import ch.noah.soundboard.logic.MainViewModelFactory
 import ch.noah.soundboard.storage.FileStorageRepository
 import ch.noah.soundboard.ui.theme.SoundboadTheme
 import coil3.compose.AsyncImage
@@ -32,6 +37,7 @@ import java.io.File
 fun BoardScreen(
 	soundBoardId: String,
 	modifier: Modifier = Modifier,
+	viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(LocalContext.current)),
 ) {
 	val viewModel: BoardViewModel = viewModel(
 		key = soundBoardId,
@@ -59,19 +65,41 @@ fun BoardScreen(
 				val context = LocalContext.current
 				val fileStorageRepository = remember { FileStorageRepository(context) }
 				Column(modifier = Modifier.fillMaxSize()) {
-					Box(
+					Row(
 						modifier = Modifier
 							.fillMaxWidth()
 							.background(MaterialTheme.colorScheme.primaryContainer)
 							.statusBarsPadding(),
-						contentAlignment = Alignment.Center
+						verticalAlignment = Alignment.CenterVertically
 					) {
+						IconButton(
+							onClick = {
+								Toast.makeText(context, "Delete soundboard not implemented yet", Toast.LENGTH_SHORT).show()
+							}
+						) {
+							Icon(
+								imageVector = Icons.Default.Delete,
+								contentDescription = "Delete soundboard",
+								modifier = Modifier
+									.padding(start = 16.dp)
+									.size(24.dp)
+							)
+						}
 						Text(
 							text = soundBoardTitle,
 							style = MaterialTheme.typography.headlineMedium,
 							color = MaterialTheme.colorScheme.onPrimaryContainer,
 							textAlign = TextAlign.Center,
-							modifier = Modifier.padding(16.dp)
+							modifier = Modifier
+								.padding(16.dp)
+								.weight(1f)
+						)
+						Icon(
+							imageVector = Icons.Default.Share,
+							contentDescription = "Share soundboard",
+							modifier = Modifier
+								.padding(end = 16.dp)
+								.size(24.dp)
 						)
 					}
 

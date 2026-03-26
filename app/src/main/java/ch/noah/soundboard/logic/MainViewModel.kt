@@ -37,6 +37,21 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
+	fun deleteSoundboard(id: String) {
+		viewModelScope.launch {
+			try {
+				databaseRepository.deleteSoundboardById(id)
+				databaseRepository.deleteSoundItemsByBoardId(id)
+				loadFromDisk()
+			} catch (e: Exception) {
+				Log.e("MainViewModel", "Error deleting soundboard with id $id", e)
+				soundBoardsMutable.update {
+					it.toError("Failed to delete soundboard: ${e.message}")
+				}
+			}
+		}
+	}
+
 	fun update() {
 		viewModelScope.launch {
 			val soundBoards = databaseRepository.getAllSoundboards()
