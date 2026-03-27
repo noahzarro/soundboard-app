@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,10 +31,16 @@ import ch.noah.soundboard.ui.theme.SoundboadTheme
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
+	deepLinkUri: Uri?,
 	modifier: Modifier = Modifier,
 	viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(LocalContext.current)),
 ) {
 	val soundBoardsState by viewModel.soundBoards.collectAsState()
+
+	LaunchedEffect(deepLinkUri) {
+		deepLinkUri?.let { viewModel.handleDeepLink(it) }
+	}
+
 
 	when (soundBoardsState) {
 		is ViewStateWithData.Loading -> {
@@ -145,7 +153,7 @@ private fun EmptyScreen(modifier: Modifier = Modifier) {
 @Composable
 fun MainScreenPreview() {
 	SoundboadTheme {
-		MainScreen()
+		MainScreen(null)
 	}
 }
 

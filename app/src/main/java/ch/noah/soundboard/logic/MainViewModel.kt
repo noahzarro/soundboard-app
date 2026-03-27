@@ -1,10 +1,12 @@
 package ch.noah.soundboard.logic
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import ch.noah.soundboard.Constants
 import ch.noah.soundboard.data.ViewState
 import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.database.DatabaseRepository
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.URLDecoder
 
 class MainViewModel(context: Context) : ViewModel() {
 
@@ -148,11 +151,25 @@ class MainViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	fun addSoundboard(url: String) {
+	fun handleDeepLink(uri: Uri) {
+		addSoundboard(uri)
+	}
+
+	fun addSoundboard(uri: Uri) {
+		val host = uri.host
+		val configUrl = if (host == Constants.DEEP_LINK_HOST) {
+			val configUrlEncoded = uri.path
+			val configUrlDecoded = URLDecoder.decode(configUrlEncoded, "UTF-8")
+				?.takeIf { it.isNotBlank() }?.trim('/')
+			configUrlDecoded
+		} else {
+			uri.toString()
+		} ?: return
+
 		viewModelScope.launch {
 			addScreenViewStateMutable.value = ViewState.Loading
 			try {
-				load(url)
+				load(configUrl.trim())
 				loadFromDisk()
 				addScreenViewStateMutable.value = ViewState.Success
 			} catch (e: Exception) {

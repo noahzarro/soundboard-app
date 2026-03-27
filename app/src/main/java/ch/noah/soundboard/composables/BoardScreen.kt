@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ch.noah.soundboard.Constants
 import ch.noah.soundboard.data.ViewStateWithData
 import ch.noah.soundboard.database.SoundItems
 import ch.noah.soundboard.logic.BoardViewModel
@@ -95,21 +96,20 @@ fun BoardScreen(
 						)
 						IconButton(
 							onClick = {
-								val configUrl = soundBoard?.configUrl
-								val sharingText = configUrl?.let {
-									"Hound, check out my soundboard:\n$it"
+								val configUrl = soundBoard?.configUrl ?: return@IconButton
+								val configUrlEncoded = configUrl.let { java.net.URLEncoder.encode(it, "UTF-8") }
+								val deepLinkUri = "${Constants.DEEP_LINK_URL}$configUrlEncoded"
+								val sharingText = "Hound, check out my soundboard:\n$deepLinkUri"
+								val sendIntent = Intent().apply {
+									action = Intent.ACTION_SEND
+									putExtra(Intent.EXTRA_TEXT, sharingText)
+									type = "text/plain"
 								}
-								sharingText?.let { text ->
-									val sendIntent = Intent().apply {
-										action = Intent.ACTION_SEND
-										putExtra(Intent.EXTRA_TEXT, text)
-										type = "text/plain"
-									}
-									val shareIntent = Intent.createChooser(sendIntent, null)
-									context.startActivity(shareIntent)
-								}
+								val shareIntent = Intent.createChooser(sendIntent, null)
+								context.startActivity(shareIntent)
+
 							},
-							modifier = Modifier.padding(start = 16.dp)
+							modifier = Modifier.padding(end = 16.dp)
 						) {
 							Icon(
 								imageVector = Icons.Default.Share,

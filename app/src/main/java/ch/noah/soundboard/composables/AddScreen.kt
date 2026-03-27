@@ -1,5 +1,6 @@
 package ch.noah.soundboard.composables
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -81,7 +82,7 @@ fun AddScreen(
 						FloatingActionButton(
 							onClick = {
 								if (urlText.isNotBlank()) {
-									viewModel.addSoundboard(urlText.trim())
+									viewModel.addSoundboard(Uri.parse(urlText.trim()))
 								}
 							},
 							modifier = Modifier.size(72.dp)
